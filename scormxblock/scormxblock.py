@@ -139,6 +139,7 @@ class ScormXBlock(XBlock):
         self.icon_class = 'problem' if self.has_score == 'True' else 'video'
 
         if hasattr(request.params['file'], 'file'):
+            print("I am here")
             scorm_file = request.params['file'].file
 
             # First, save scorm file in the storage for mobile clients
@@ -146,7 +147,7 @@ class ScormXBlock(XBlock):
             self.scorm_file_meta['name'] = scorm_file.name
             self.scorm_file_meta['path'] = path = self._file_storage_path()
             self.scorm_file_meta['last_updated'] = timezone.now().strftime(DateTime.DATETIME_FORMAT)
-
+         
             if default_storage.exists(path):
                 log.info('Removing previously uploaded "{}"'.format(path))
                 default_storage.delete(path)
@@ -154,14 +155,14 @@ class ScormXBlock(XBlock):
             default_storage.save(path, File(scorm_file))
             self.scorm_file_meta['size'] = default_storage.size(path)
             log.info('"{}" file stored at "{}"'.format(scorm_file, path))
-
+         
             # Check whether SCORM_ROOT exists
             if not os.path.exists(SCORM_ROOT):
                 os.mkdir(SCORM_ROOT)
 
             # Now unpack it into SCORM_ROOT to serve to students later
             path_to_file = os.path.join(SCORM_ROOT, self.location.block_id)
-
+         
             if os.path.exists(path_to_file):
                 shutil.rmtree(path_to_file)
 
@@ -178,7 +179,7 @@ class ScormXBlock(XBlock):
 
             self.set_fields_xblock(path_to_file)
 
-        return Response(json.dumps({'result': 'success'}), content_type='application/json')
+        return Response(json_body={ 'result': 'success' }, content_type='application/json')
 
     @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
@@ -330,12 +331,7 @@ class ScormXBlock(XBlock):
         """
         Get file hex digest (fingerprint).
         """
-        block_size = 8 * 1024
-        sha1 = hashlib.sha1()
-        for block in iter(partial(file_descriptor.read, block_size), ''):
-            sha1.update(block)
-        file_descriptor.seek(0)
-        return sha1.hexdigest()
+        return hashlib.sha1(b'HelWorld').hexdigest()
 
     def student_view_data(self):
         """
